@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<style>
+input, label
+{
+	display: block;
+	margin: 10px;
+}
+
+.button
+{
+	display: inline-block;
+	padding: 10px;
+	border: 1px solid black;
+	border-radius: 10px;
+	box-shadow: 1px 2px 0px;
+	margin: 10px;
+}
+
+#subsLine
+{
+	font-size: 3em;
+}
+		</style>
+
+		<script src="srt.js"></script>
+		<script>
+"use strict";
+
+var videoPlayer = null;
+var subs = null;
+
+var loopTimeout = null;
+
+function init()
+{
+	videoPlayer = document.getElementById('videoPlayer');
+}
+
+// start, end = seconds
+function doThing()
+{
+	var sub = subs[Math.floor(Math.random() * subs.length)];
+	clearTimeout(loopTimeout);
+	repeatVideo(sub);
+}
+
+function repeatVideo(sub)
+{
+	videoPlayer.pause();
+	videoPlayer.currentTime = sub.start;
+	var subsLine = document.getElementById('subsLine');
+	subsLine.innerHTML = sub.text;
+	videoPlayer.play();
+	loopTimeout = setTimeout(repeatVideo, (sub.end - sub.start) * 1000, sub);
+}
+
+function stopVideo()
+{
+	clearTimeout(loopTimeout);
+	videoPlayer.pause();
+}
+
+function load()
+{
+	var srtFileElement = document.getElementById('subsFile');
+	var videoFileElement = document.getElementById('videoFile');
+	var srtFile = srtFileElement.files[0];
+
+	var fileReader = new FileReader();
+	fileReader.onloadend = function(e) {
+		if(fileReader.error)
+		{
+			alert('cant open the subtitles file');
+			return;
+		}
+		subs = srtParse(fileReader.result);
+		videoPlayer.src = URL.createObjectURL(videoFileElement.files[0]);
+		document.getElementById('setupPanel').style.display = "none";
+		document.getElementById('playbackPanel').style.display = "block";
+	};
+	fileReader.readAsText(srtFile);
+}
+
+		</script>
+	</head>
+
+
+	<body onload="init()">
+		<div id="setupPanel">
+			<h1>Setup</h1>
+			<label>Video file:</label>
+			<input id="videoFile" type="file"></input>
+			<label>Subtitles file:</label>
+			<input id="subsFile" type="file"></input>
+			<div id="setupButton" class="button" onclick="load()">Load</div>
+		</div>
+		<div id="playbackPanel" style="display: none">			
+			<video id="videoPlayer" style="display: block"></video>
+			<div id="subsLine"></div>
+			<div id="playButton" class="button" onclick="doThing()">Click here to play</div>
+			<div id="stopButton" class="button" onclick="stopVideo()">Stop</div>
+		</div>
+	</body>
+<html>
+
